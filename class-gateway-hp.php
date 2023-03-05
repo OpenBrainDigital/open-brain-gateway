@@ -19,21 +19,17 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('openbrain_gateway_hp') 
 			$this->success_massage = $this->settings['success_massage'];
 			$this->failed_massage = $this->settings['failed_massage'];
 			$this->Debug_Mode = $this->settings['Debug_Mode'];
-
 			if (version_compare(WOOCOMMERCE_VERSION, '2.0.0', '>=')){
 				add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
-
 			}
 			else
 				add_action('woocommerce_update_options_payment_gateways', array($this, 'process_admin_options'));
 				add_action('woocommerce_receipt_' . $this->id . '', array($this, 'openbrain_send_to_gateway_hp'));
-				add_action('woocommerce_api_' . strtolower(get_class($this)) . '', array($this, 'Return_from_gateway_hp'));
+				add_action('woocommerce_api_' . strtolower(get_class($this)) . '', array($this, 'openbrain_gateway_return_from_gateway_hp'));
 		}
-
-
-		public function admin_options()
+		public function openbrain_gateway_admin_options()
 		{
-			parent::admin_options();
+			parent::openbrain_gateway_admin_options();
 		}
 		public function openbrain_init_form_fields()
 		{
@@ -120,7 +116,6 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('openbrain_gateway_hp') 
 				)
 			);
 		}
-
 		public function process_payment($order_id)
 		{
 			$order = new WC_Order($order_id);
@@ -153,7 +148,7 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('openbrain_gateway_hp') 
 			do_action('gateway_hp_Gateway_After_Form', $order_id, $woocommerce);
 			$Amount = intval( $order->get_total() );
 			$Amount = apply_filters('woocommerce_order_amount_total_IRANIAN_gateways_before_check_currency', $Amount, $currency);
-			$Amount = $this->hillapay_check_currency( $Amount, $currency);
+			$Amount = $this->openbrain_gateway_check_currency( $Amount, $currency);
 			$Amount = apply_filters('woocommerce_order_amount_total_IRANIAN_gateways_after_check_currency', $Amount, $currency);
 			$Amount = apply_filters('woocommerce_order_amount_total_IRANIAN_gateways_irt', $Amount, $currency);
 			$Amount = apply_filters('woocommerce_order_amount_total_gateway_hp', $Amount, $currency);
@@ -277,7 +272,7 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('openbrain_gateway_hp') 
 				do_action('gateway_hp_Send_to_Gateway_Failed', $order_id, $Fault);
 			}
 		}
-		public function Return_from_gateway_hp()
+		public function openbrain_gateway_return_from_gateway_hp()
 		{
 			global $woocommerce;
 			if(isset($_GET['wc_order'])){$order_id = esc_sql( $_GET['wc_order'] );}
@@ -305,7 +300,7 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('openbrain_gateway_hp') 
 						update_post_meta($order_id, 'woo_hillapay_rrn', $rrn );
 						$Amount = intval($order->order_total);
 						$Amount = apply_filters('woocommerce_order_amount_total_IRANIAN_gateways_before_check_currency', $Amount, $currency);
-						$Amount = $this->hillapay_check_currency( $Amount, $currency );
+						$Amount = $this->openbrain_gateway_check_currency( $Amount, $currency );
 						$transaction_id = apply_filters('gateway_hp_return_refid', $transaction_id);
 						$data = array('order_id' => $order_id, 'transaction_id' => $transaction_id, 'rrn' => $rrn);
 						$args = array
@@ -336,7 +331,7 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('openbrain_gateway_hp') 
 						else
 						{
 							$code = wp_remote_retrieve_response_code( $response_verify );
-							$txtmsg = $this->status_message( $code );
+							$txtmsg = $this->openbrain_gateway_status_message( $code );
 							if( $code === 200 )
 							{
 								$response_verify_body = json_decode($response_verify['body'], true);
@@ -483,7 +478,7 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('openbrain_gateway_hp') 
 			}
 		}
 
-		public function hillapay_check_currency( $Amount, $currency )
+		public function openbrain_gateway_check_currency( $Amount, $currency )
 		{
 			if(strtolower( $currency ) == strtolower('IRT') || strtolower( $currency ) == strtolower('TOMAN') || strtolower( $currency ) == strtolower('Iran TOMAN') || strtolower( $currency ) == strtolower('Iranian TOMAN') || strtolower( $currency ) == strtolower('Iran-TOMAN') || strtolower( $currency ) == strtolower('Iranian-TOMAN') || strtolower( $currency ) == strtolower('Iran_TOMAN') || strtolower( $currency ) == strtolower('Iranian_TOMAN') || strtolower( $currency ) == strtolower('تومان') || strtolower( $currency ) == strtolower('تومان ایران') ){
 				$Amount = $Amount * 10;
@@ -496,7 +491,7 @@ if( class_exists('WC_Payment_Gateway') && !class_exists('openbrain_gateway_hp') 
 			}
 			return  $Amount;
 		}
-		public function status_message($code){
+		public function openbrain_gateway_status_message($code){
 			switch ($code){
 				case 200 :
 					return 'عملیات با موفقیت انجام شد';
